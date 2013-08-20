@@ -1,5 +1,4 @@
-﻿
-Save_Shape(data, path) {
+﻿Save_Shape(data, path) {
 	FileDelete, % Path
 	output := "", bloc
 

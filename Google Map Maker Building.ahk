@@ -62,10 +62,7 @@ currentY := startY
 mutareBloc := 5		;in pixeli
 rotireBloc := 0.5 	;in grade
 
-
 SetWorkingDir %A_ScriptDir%
-shapes =
-fiels =
 Load_All(shapes, files)
 
 ;0,0|271,0|271,445|164,445|164,379|107,379|107,445|0,445
@@ -139,7 +136,7 @@ selectareBloc(numar_bloc)
 	rotireBloc(unghi_total)
 	redesenare(bloc)
 
-	ToolTip, % "#" . numar_bloc, currentX+50, currentY+50
+	ToolTip, % files[numar_bloc], currentX+50, currentY+50
 	SetTimer, RemoveToolTip, 500
 	return
 }
