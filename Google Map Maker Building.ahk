@@ -1,12 +1,12 @@
 #include fileio.ahk
 #include gdip_routines.ahk
 
-degrees(deg) 
+degrees(deg)
 {
 	return deg*0.0174532925
 }
 
-StrSplit(ByRef text, delimiter := "", omitChars := "") ; Using ByRef for performance (you can pass non-variables too)
+StrSplit(ByRef text, delimiter := "", omitChars := "")
 {
     ret := []
     Loop, Parse, text, % delimiter, % omitChars
@@ -15,7 +15,7 @@ StrSplit(ByRef text, delimiter := "", omitChars := "") ; Using ByRef for perform
 }
 
 Gdip_Startup()
- 
+
 CoordMode, ToolTip, Screen
 CoordMode, Mouse, Screen
 CoordMode, Pixel, Screen
@@ -40,11 +40,11 @@ bPen := Gdip_CreatePen(0xffff0000, 2)
 redesenare(puncte)
 {
 	Global
-	
+
 	Gdip_GraphicsClear(GDraw_%Canvas%)
-	
+
 	numar := puncte.MaxIndex()
-	
+
 	repetari := numar - 1
 	Loop, %repetari%
 	{
@@ -65,18 +65,8 @@ rotireBloc := 0.5 	;in grade
 
 SetWorkingDir %A_ScriptDir%
 shapes =
-fiels = 
+fiels =
 Load_All(shapes, files)
-
-; Loop % a1.MaxIndex() {
-	; bloc := a1[A_Index]
-    ; Loop, % bloc.MaxIndex() {
-		; pixel1 := bloc[A_Index][1]
-		; pixel2 := bloc[A_Index][2]
-	; }
-	; ListVars
-	; Pause
-; }
 
 ;0,0|271,0|271,445|164,445|164,379|107,379|107,445|0,445
 
@@ -89,7 +79,7 @@ selectareBloc(numar_bloc_curent)
 calculareCentru()
 {
 	Global
-	
+
 	minX := maxX := bloc[1][1]
 	minY := maxY := bloc[1][2]
 	Loop, %numar_puncte%
@@ -98,7 +88,7 @@ calculareCentru()
 			minX := bloc[a_index][1]
 		if (bloc[a_index][1] > maxX)
 			maxX := bloc[a_index][1]
-			
+
 		if (bloc[a_index][2] < minY)
 			minY := bloc[a_index][2]
 		if (bloc[a_index][2] > maxY)
@@ -115,7 +105,7 @@ rotireBloc(unghi)
 	{
 		s := sin(unghi)
 		c := cos(unghi)
-		
+
 		bloc[a_index][1] := bloc[a_index][1] - cx
 		bloc[a_index][2] := bloc[a_index][2] - cy
 
@@ -123,7 +113,7 @@ rotireBloc(unghi)
 		ynew := bloc[a_index][1] * s + bloc[a_index][2] * c
 
 		bloc[a_index][1] := xnew + cx
-		bloc[a_index][2] := ynew + cy	
+		bloc[a_index][2] := ynew + cy
 	}
 	return
 }
@@ -144,7 +134,7 @@ selectareBloc(numar_bloc)
 		bloc[a_index][1] := bloc[a_index][1] + currentX
 		bloc[a_index][2] := bloc[a_index][2] + currentY
 	}
-	
+
 	calculareCentru()
 	rotireBloc(unghi_total)
 	redesenare(bloc)
@@ -157,49 +147,56 @@ selectareBloc(numar_bloc)
 repozitionare(x, y)
 {
 	Global
-	
+
 	Loop, %numar_puncte%
 	{
 		bloc[a_index][1] := bloc[a_index][1] + x
 		bloc[a_index][2] := bloc[a_index][2] + y
 	}
-	
+
 	redesenare(bloc)
 	calculareCentru()
 }
 
-Gui, 1: Add, Edit, vMyEdit x10 y30 w400 h200
-Gui, 1: Add, Text, x10 y10 w400 h20 , Coordonate poligon:
-Gui, 1: Add, Button, x311 y235 w100 h30 , Trimite
+Gui, 1: Add, Edit, vFile x10 y10 w400 h20
+Gui, 1: Add, Edit, vMyEdit x10 y55 w400 h200
+Gui, 1: Add, Text, x10 y35 w400 h20 , Coordonate poligon:
+Gui, 1: Add, Button, x311 y260 w100 h30 , Trimite
 Return
 
 A::
 {
 	Gui, 99:Hide
-	
+
 	ButtonTrimite:
 	KeyWait,a
 	IfWinExist, Adauga poligon
 	{
 		Gui, 1:Hide
 		Gui, 1:Submit
-		
+
 		If !ErrorLevel AND MyEdit
-		{			
+		{
 			shapes[numar_blocuri+1] := Array()
 			Loop, parse, MyEdit, `|
 			{
 				shapes[numar_blocuri+1][a_index] := StrSplit(A_LoopField, ",").clone()
 			}
 			numar_blocuri += 1
-			selectareBloc(numar_blocuri)			
+			selectareBloc(numar_blocuri)
 		}
 		GuiControl,,MyEdit,
+		If !ErrorLevel AND File
+		{
+			files[numar_blocuri] := File
+			Save_Shape(shapes[numar_blocuri], "shapes\" . files[numar_blocuri] . ".txt")
+		}
+		GuiControl,,File,
 		Gui, 99:Show
 	}
 	Else
-	{		
-		Gui, 1: Show, Center h275 w420, Adauga poligon
+	{
+		Gui, 1: Show, Center h305 w420, Adauga poligon
 	}
 
 	Return
@@ -211,7 +208,7 @@ NumpadAdd::
 	unghi_total := unghi_total + unghi
 	rotireBloc(unghi)
 	redesenare(bloc)
-	
+
 	return
 }
 
@@ -221,7 +218,7 @@ NumpadSub::
 	unghi_total := unghi_total + unghi
 	rotireBloc(unghi)
 	redesenare(bloc)
-	
+
 	return
 }
 
@@ -234,48 +231,48 @@ Right::
 	{
 		currentX += mutareBloc*-1
 		currentY -= mutareBloc
-		repozitionare(mutareBloc*-1, mutareBloc*-1)	
+		repozitionare(mutareBloc*-1, mutareBloc*-1)
 	}
 	Else If ((GetKeyState("Up", "P") AND GetKeyState("RIGHT", "P")))
 	{
 		currentX += mutareBloc
 		currentY -= mutareBloc
-		repozitionare(mutareBloc, mutareBloc*-1)	
+		repozitionare(mutareBloc, mutareBloc*-1)
 	}
 	Else If ((GetKeyState("DOWN", "P") AND GetKeyState("LEFT", "P")))
 	{
 		currentX += mutareBloc*-1
 		currentY += mutareBloc
-		repozitionare(mutareBloc*-1, mutareBloc)	
+		repozitionare(mutareBloc*-1, mutareBloc)
 	}
 	Else If ((GetKeyState("DOWN", "P") AND GetKeyState("RIGHT", "P")))
 	{
 		currentX += mutareBloc
 		currentY += mutareBloc
-		repozitionare(mutareBloc, mutareBloc)	
+		repozitionare(mutareBloc, mutareBloc)
 	}
 	Else If (GetKeyState("Up", "P"))
     {
 		currentY -= mutareBloc
-		repozitionare(0, mutareBloc*-1)	
+		repozitionare(0, mutareBloc*-1)
     }
 	Else If (GetKeyState("Left", "P"))
     {
 		currentX += mutareBloc*-1
-		repozitionare(mutareBloc*-1, 0)	
+		repozitionare(mutareBloc*-1, 0)
     }
 	Else If (GetKeyState("Down", "P"))
     {
 		currentY += mutareBloc
-		repozitionare(0, mutareBloc)	
+		repozitionare(0, mutareBloc)
     }
 	Else If (GetKeyState("Right", "P"))
     {
 		currentX += mutareBloc
-		repozitionare(mutareBloc, 0)	
+		repozitionare(mutareBloc, 0)
     }
-	
-	
+
+
 	return
 }
 
@@ -302,40 +299,40 @@ NumpadDiv::
 }
 
 PgUp::
-{	
+{
 	if (numar_bloc_curent = numar_blocuri)
 	{
 		numar_bloc_curent := 1
 	} else {
 		numar_bloc_curent := numar_bloc_curent + 1
 	}
-		
+
 	selectareBloc(numar_bloc_curent)
-	
+
 	return
 }
 
 PgDn::
-{	
+{
 	if (numar_bloc_curent = 1)
 	{
 		numar_bloc_curent := numar_blocuri
 	} else {
 		numar_bloc_curent := numar_bloc_curent - 1
 	}
-	
-	selectareBloc(numar_bloc_curent)	
+
+	selectareBloc(numar_bloc_curent)
 	return
 }
 
 r::
-{	
+{
 	unghi_total := unghi_total * -1
-	rotireBloc(unghi_total)	
+	rotireBloc(unghi_total)
 	repozitionare(startX-currentX, startY-currentY)
-		
+
 	redesenare(bloc)
-	
+
 	currentX := startX
 	currentY := startY
 	unghi_total := 0
@@ -362,7 +359,7 @@ Enter::
 }
 
 v::
-{	
+{
 	tooltip, Liviu Roman`nGoogle Map Maker Building`nVersiunea 1.00, currentX, currentY
 	SetTimer, RemoveToolTip, 5000
 	return
@@ -373,4 +370,4 @@ RemoveToolTip:
 	ToolTip
 return
 
-~ESC::ExitApp 
+~ESC::ExitApp
