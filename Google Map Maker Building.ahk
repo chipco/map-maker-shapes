@@ -212,10 +212,11 @@ A::
 				shapes[numar_blocuri+1][a_index] := StrSplit(A_LoopField, ",").clone()
 			}
 			numar_blocuri += 1
-			selectareBloc(numar_blocuri)
 			
 			files[numar_blocuri] := File
 			Save_Shape(shapes[numar_blocuri], "shapes\" . files[numar_blocuri] . ".txt")
+			
+			selectareBloc(numar_blocuri)
 			
 			GuiControl,,Coords,
 			GuiControl,,File,
@@ -262,8 +263,8 @@ Q::
 		
 		If !ErrorLevel AND FirstShapePoint AND SecondShapePoint
 		{
-			moveX := currentX + beforeShape[FirstShapePoint][1] - bloc[SecondShapePoint][1]
-			moveY := currentY + beforeShape[FirstShapePoint][2] - bloc[SecondShapePoint][2]
+			moveX := currentX - beforeShape[FirstShapePoint][1] - bloc[SecondShapePoint][1]
+			moveY := currentY - beforeShape[FirstShapePoint][2] - bloc[SecondShapePoint][2]
 			
 			MouseMove, currentX, currentY
 			MouseClickDrag, L, currentX, currentY, moveX, moveY, 50
