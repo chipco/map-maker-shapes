@@ -23,6 +23,18 @@ CoordMode, Pixel, Screen
 Gui, 99: +E0x80000 +LastFound +AlwaysOnTop +ToolWindow +OwnDialogs
 Gui, 99: Show
 
+Gui, 2: Add, Text,, Numele fisierului
+Gui, 2: Add, Edit, w150 vFile
+Gui, 2: Add, Text,, Lista coordonate (x1,y1 x2,y2 ... xn,yn)
+Gui, 2: Add, Edit, w400 h200 vCoords
+Gui, 2: Add, Button, w100 x310, Trimite
+
+Gui, 3: Add, DropDownList, vFirstShapePoint w100
+Gui, 3: Add, DropDownList, vSecondShapePoint w100 xp+110
+Gui, 3: Add, Button, xp+110 w30 , OK
+Gui, 3: Add, Text, xm, Primul bloc
+Gui, 3: Add, Text, xp+110 yp, Al doilea bloc
+
 Width := A_ScreenWidth,
 Height := A_ScreenHeight,
 hwnd1 := WinExist(),
@@ -57,19 +69,31 @@ redesenare(puncte)
 
 startX := (Width / 2) + 100
 startY := (Height / 3)
-currentX := startX
-currentY := startY
 mutareBloc := 5		;in pixeli
 rotireBloc := 0.5 	;in grade
 
 SetWorkingDir %A_ScriptDir%
 Load_All(shapes, files)
 
-;0,0|271,0|271,445|164,445|164,379|107,379|107,445|0,445
-
 numar_blocuri := shapes.MaxIndex()
-numar_bloc_curent := 1
-unghi_total := 0
+
+IfExist, session.ini
+{
+	IniRead, currentX, session.ini, CurrentSession, currentX
+	IniRead, currentY, session.ini, CurrentSession, currentY
+	IniRead, unghi_total, session.ini, CurrentSession, unghiTotal
+	IniRead, numar_bloc_curent, session.ini, CurrentSession, shapeID
+} Else {
+	IniWrite, %startX%, session.ini, CurrentSession, currentX
+	IniWrite, %startY%, session.ini, CurrentSession, currentY
+	IniWrite, 0, session.ini, CurrentSession, unghiTotal
+	IniWrite, 1, session.ini, CurrentSession, shapeID
+	
+	currentX := startX
+	currentY := startY
+	numar_bloc_curent := 1
+	unghi_total := 0
+}
 
 selectareBloc(numar_bloc_curent)
 
@@ -111,7 +135,10 @@ rotireBloc(unghi)
 
 		bloc[a_index][1] := xnew + cx
 		bloc[a_index][2] := ynew + cy
-	}
+	}	
+	
+	IniWrite, %unghi_total%, session.ini, CurrentSession, unghiTotal
+	
 	return
 }
 
@@ -135,7 +162,9 @@ selectareBloc(numar_bloc)
 	calculareCentru()
 	rotireBloc(unghi_total)
 	redesenare(bloc)
-
+	
+	IniWrite, %numar_bloc%, session.ini, CurrentSession, shapeID
+	
 	ToolTip, % files[numar_bloc], currentX+50, currentY+50
 	SetTimer, RemoveToolTip, 500
 	return
@@ -155,47 +184,69 @@ repozitionare(x, y)
 	calculareCentru()
 }
 
-Gui, 1: Add, Edit, vFile x10 y10 w400 h20
-Gui, 1: Add, Edit, vMyEdit x10 y55 w400 h200
-Gui, 1: Add, Text, x10 y35 w400 h20 , Coordonate poligon:
-Gui, 1: Add, Button, x311 y260 w100 h30 , Trimite
-Return
-
 A::
 {
 	Gui, 99:Hide
 
-	ButtonTrimite:
+	2GuiClose:
+	2ButtonTrimite:
 	KeyWait,a
-	IfWinExist, Adauga poligon
+	IfWinExist, Adauga forma bloc
 	{
-		Gui, 1:Hide
-		Gui, 1:Submit
-
-		If !ErrorLevel AND MyEdit
+		Gui, 2:Hide
+		Gui, 2:Submit
+		
+		If !ErrorLevel AND File AND Coords
 		{
-			shapes[numar_blocuri+1] := Array()
-			Loop, parse, MyEdit, `|
+			shapes[numar_blocuri+1] := Array()	
+			Loop, parse, Coords, `|
 			{
 				shapes[numar_blocuri+1][a_index] := StrSplit(A_LoopField, ",").clone()
 			}
 			numar_blocuri += 1
 			selectareBloc(numar_blocuri)
-		}
-		GuiControl,,MyEdit,
-		If !ErrorLevel AND File
-		{
+			
 			files[numar_blocuri] := File
 			Save_Shape(shapes[numar_blocuri], "shapes\" . files[numar_blocuri] . ".txt")
-		}
-		GuiControl,,File,
-		Gui, 99:Show
+			
+			GuiControl,,Coords,
+			GuiControl,,File,
+			Gui, 99:Show
+		} Else {
+			MsgBox, Toate campurile sunt obligatorii
+			Gui, 2:Show
+		}	
 	}
 	Else
 	{
-		Gui, 1: Show, Center h305 w420, Adauga poligon
+		Gui, 2: Show, Center, Adauga forma bloc
 	}
 
+	Return
+}
+
+Q::
+{
+	if (beforeShape != "")
+	{
+		List1 := ""
+		List2 := ""
+ 		numar_puncte_before := beforeShape.MaxIndex()
+		Loop, %numar_puncte_before%
+			List1 .= A_Index . "|" 
+		
+		Loop, %numar_puncte%
+			List2 .= A_Index . "|" 
+		
+		GuiControl, 3:, FirstShapePoint, %List1%
+		GuiControl, 3:, SecondShapePoint, %List2%
+		GuiControl, 3: Choose, FirstShapePoint, 1 
+		GuiControl, 3: Choose, SecondShapePoint, 1 
+		Gui, 3: Show, Center
+	} else {
+		MsgBox, Mai intai trebuie sa desenati un bloc
+	}
+	
 	Return
 }
 
@@ -205,7 +256,7 @@ NumpadAdd::
 	unghi_total := unghi_total + unghi
 	rotireBloc(unghi)
 	redesenare(bloc)
-
+	
 	return
 }
 
@@ -269,7 +320,9 @@ Right::
 		repozitionare(mutareBloc, 0)
     }
 
-
+	IniWrite, %currentX%, session.ini, CurrentSession, currentX
+	IniWrite, %currentY%, session.ini, CurrentSession, currentY
+	
 	return
 }
 
@@ -333,6 +386,11 @@ r::
 	currentX := startX
 	currentY := startY
 	unghi_total := 0
+	
+	IniWrite, %startX%, session.ini, CurrentSession, currentX
+	IniWrite, %startY%, session.ini, CurrentSession, currentY
+	IniWrite, 0, session.ini, CurrentSession, unghiTotal
+	IniWrite, 1, session.ini, CurrentSession, shapeID
 	return
 }
 
@@ -350,6 +408,12 @@ Enter::
 	Click
 	Sleep, 100
 	Click
+	
+	beforeShape := bloc.clone()
+	Loop, %numar_puncte%
+	{
+		beforeShape[a_index] := bloc[a_index].clone()
+	}
 
 	Gui,99: Show
 	return

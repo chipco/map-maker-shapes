@@ -5,8 +5,7 @@
 	Loop, % data.MaxIndex() {
 		output .= data[A_index][1] . " " . data[A_index][2] . ", "
 	}
-	ListVars
-	Pause
+
 	FileAppend, % output, % Path
 	If (ErrorLevel)
 		Return -1
