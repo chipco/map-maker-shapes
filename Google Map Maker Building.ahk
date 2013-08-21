@@ -31,7 +31,7 @@ Gui, 2: Add, Button, w100 x310, Trimite
 
 Gui, 3: Add, DropDownList, vFirstShapePoint w100
 Gui, 3: Add, DropDownList, vSecondShapePoint w100 xp+110
-Gui, 3: Add, Button, xp+110 w30 , OK
+Gui, 3: Add, Button, xp+110 w30, OK
 Gui, 3: Add, Text, xm, Primul bloc
 Gui, 3: Add, Text, xp+110 yp, Al doilea bloc
 
@@ -148,11 +148,20 @@ selectareBloc(numar_bloc)
 
 	numar_puncte := shapes[numar_bloc].MaxIndex()
 	bloc := shapes[numar_bloc].clone()
-	Loop, %numar_puncte%
+	
+	IfWinExist, Lipire blocuri
 	{
-		bloc[a_index] := shapes[numar_bloc][a_index].clone()
+		List3 := "|"
+		Loop, %numar_puncte%
+		{
+			bloc[a_index] := shapes[numar_bloc][a_index].clone()
+			List3 .= a_index . "|"
+		}
+		
+		GuiControl, 3:, SecondShapePoint, %List3%
+		GuiControl, 3: Choose, SecondShapePoint, 1
 	}
-
+		
 	Loop, %numar_puncte%
 	{
 		bloc[a_index][1] := bloc[a_index][1] + currentX
@@ -188,7 +197,6 @@ A::
 {
 	Gui, 99:Hide
 
-	2GuiClose:
 	2ButtonTrimite:
 	KeyWait,a
 	IfWinExist, Adauga forma bloc
@@ -228,9 +236,9 @@ A::
 Q::
 {
 	if (beforeShape != "")
-	{
-		List1 := ""
-		List2 := ""
+	{		
+		List1 := "|"
+		List2 := "|"
  		numar_puncte_before := beforeShape.MaxIndex()
 		Loop, %numar_puncte_before%
 			List1 .= A_Index . "|" 
@@ -242,9 +250,27 @@ Q::
 		GuiControl, 3:, SecondShapePoint, %List2%
 		GuiControl, 3: Choose, FirstShapePoint, 1 
 		GuiControl, 3: Choose, SecondShapePoint, 1 
-		Gui, 3: Show, Center
+		Gui, 3: Show, Center, Lipire blocuri
+		Return
 	} else {
 		MsgBox, Mai intai trebuie sa desenati un bloc
+	}
+	
+	3ButtonOK:
+	{
+		Gui, 3:Submit
+		
+		If !ErrorLevel AND FirstShapePoint AND SecondShapePoint
+		{
+			moveX := currentX + beforeShape[FirstShapePoint][1] - bloc[SecondShapePoint][1]
+			moveY := currentY + beforeShape[FirstShapePoint][2] - bloc[SecondShapePoint][2]
+			
+			MouseMove, currentX, currentY
+			MouseClickDrag, L, currentX, currentY, moveX, moveY, 50
+			Sleep, 500
+			;msgbox, % moveX . " x " . moveY
+		}		
+		Return
 	}
 	
 	Return
