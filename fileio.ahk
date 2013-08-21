@@ -29,7 +29,7 @@ Load_Shape(path) {
 		shape[A_Index][2] :=  output2
 		p0 := p1 + StrLen(output1) + 2 + StrLen(output2)
 	}
-
+		
 	Return shape
 }
 
@@ -45,7 +45,8 @@ Load_All(ByRef shapes, ByRef files) {
 	Loop, parse, FileList, `n
 	{
 		if A_LoopField =
-			continue
+			continue			
+		
 		file := "shapes\" . A_LoopField
 		shapes[A_Index] := Load_Shape(file)
 		files[A_Index] := A_LoopField

@@ -51,7 +51,7 @@ bPen := Gdip_CreatePen(0xffff0000, 2)
 
 redesenare(puncte)
 {
-	Global
+	Global	
 
 	Gdip_GraphicsClear(GDraw_%Canvas%)
 
@@ -69,10 +69,6 @@ redesenare(puncte)
 
 startX := (Width / 2) + 100
 startY := (Height / 3)
-currentX := startX
-currentY := startY
-numar_bloc_curent := 1
-unghi_total := 0
 mutareBloc := 5		;in pixeli
 rotireBloc := 0.5 	;in grade
 
@@ -81,7 +77,39 @@ Load_All(shapes, files)
 
 numar_blocuri := shapes.MaxIndex()
 
+IfExist, session.ini
+{
+	IniRead, currentX, session.ini, CurrentSession, currentX
+	IniRead, currentY, session.ini, CurrentSession, currentY
+	IniRead, isFlipH, session.ini, CurrentSession, isFlipH
+	IniRead, isFlipV, session.ini, CurrentSession, isFlipV
+	IniRead, unghi_total, session.ini, CurrentSession, unghiTotal
+	IniRead, numar_bloc_curent, session.ini, CurrentSession, shapeID
+} Else {
+	IniWrite, 1, session.ini, CurrentSession, shapeID
+	IniWrite, 0, session.ini, CurrentSession, unghiTotal
+	IniWrite, 0, session.ini, CurrentSession, isFlipH
+	IniWrite, 0, session.ini, CurrentSession, isFlipV
+	IniWrite, %startX%, session.ini, CurrentSession, currentX
+	IniWrite, %startY%, session.ini, CurrentSession, currentY
+	
+	currentX := startX
+	currentY := startY
+	numar_bloc_curent := 1
+	unghi_total := 0
+}
 selectareBloc(numar_bloc_curent)
+
+If (isFlipH)
+{
+	flipHorizontal()
+}
+
+If (isFlipV)
+{
+	flipVertical()
+}
+redesenare(bloc)
 
 calculareCentru()
 {
@@ -121,6 +149,8 @@ rotireBloc(unghi)
 
 		bloc[a_index][1] := xnew + cx
 		bloc[a_index][2] := ynew + cy
+		
+		IniWrite, %unghi_total%, session.ini, CurrentSession, unghiTotal
 	}	
 
 	return
@@ -144,6 +174,11 @@ selectareBloc(numar_bloc)
 		
 		GuiControl, 3:, SecondShapePoint, %List3%
 		GuiControl, 3: Choose, SecondShapePoint, 1
+	} Else {
+		Loop, %numar_puncte%
+		{
+			bloc[a_index] := shapes[numar_bloc][a_index].clone()			
+		}
 	}
 		
 	Loop, %numar_puncte%
@@ -154,7 +189,8 @@ selectareBloc(numar_bloc)
 
 	calculareCentru()
 	rotireBloc(unghi_total)
-	redesenare(bloc)
+	
+	IniWrite, %numar_bloc%, session.ini, CurrentSession, shapeID
 	
 	ToolTip, % files[numar_bloc], currentX+50, currentY+50
 	SetTimer, RemoveToolTip, 500
@@ -170,9 +206,31 @@ repozitionare(x, y)
 		bloc[a_index][1] := bloc[a_index][1] + x
 		bloc[a_index][2] := bloc[a_index][2] + y
 	}
-
+	
 	redesenare(bloc)
 	calculareCentru()
+}
+
+flipHorizontal()
+{
+	Global
+	
+	calculareCentru()	
+	Loop, %numar_puncte%
+	{
+		bloc[a_index][1] := maxX - bloc[a_index][1] + currentX
+	}
+}
+
+flipVertical()
+{
+	Global
+	
+	calculareCentru()
+	Loop, %numar_puncte%
+	{
+		bloc[a_index][2] := maxY - bloc[a_index][2] + currentY
+	}
 }
 
 A::
@@ -262,21 +320,19 @@ Q::
 NumpadAdd::
 {
 	unghi := degrees(rotireBloc)
-	unghi_total := unghi_total + unghi
+	unghi_total += unghi
 	rotireBloc(unghi)
-	redesenare(bloc)
-	
-	return
+	redesenare(bloc)	
+	Return
 }
 
 NumpadSub::
 {
 	unghi := degrees(rotireBloc)*-1
-	unghi_total := unghi_total + unghi
+	unghi_total += unghi
 	rotireBloc(unghi)
 	redesenare(bloc)
-
-	return
+	Return
 }
 
 Up::
@@ -329,56 +385,90 @@ Right::
 		repozitionare(mutareBloc, 0)
     }
 
+	IniWrite, %currentX%, session.ini, CurrentSession, currentX
+	IniWrite, %currentY%, session.ini, CurrentSession, currentY
+
 	return
 }
 
 NumpadMult::
 {
-	Loop, %numar_puncte%
+	flipHorizontal()
+	
+	If (isFlipH = 1)
 	{
-		bloc[a_index][1] := maxX - bloc[a_index][1] + currentX
+		IniWrite, 0, session.ini, CurrentSession, isFlipH
+	} Else {
+		IniWrite, 1, session.ini, CurrentSession, isFlipH
 	}
+	
 	redesenare(bloc)
-	calculareCentru()
 	return
 }
 
 NumpadDiv::
 {
-	Loop, %numar_puncte%
+	flipVertical()
+	
+	If (isFlipV = 1)
 	{
-		bloc[a_index][2] := maxY - bloc[a_index][2] + currentY
+		IniWrite, 0, session.ini, CurrentSession, isFlipV
+	} Else {
+		IniWrite, 1, session.ini, CurrentSession, isFlipV
 	}
+	
 	redesenare(bloc)
-	calculareCentru()
 	return
 }
 
 PgUp::
 {
-	if (numar_bloc_curent = numar_blocuri)
+	If (numar_bloc_curent = numar_blocuri)
 	{
 		numar_bloc_curent := 1
-	} else {
-		numar_bloc_curent := numar_bloc_curent + 1
+	} Else {
+		numar_bloc_curent += 1
 	}
 
 	selectareBloc(numar_bloc_curent)
+	
+	If (isFlipH)
+	{
+		flipHorizontal()
+	}
 
-	return
+	If (isFlipV)
+	{
+		flipVertical()
+	}
+	
+	redesenare(bloc)
+	Return
 }
 
 PgDn::
 {
-	if (numar_bloc_curent = 1)
+	If (numar_bloc_curent = 1)
 	{
 		numar_bloc_curent := numar_blocuri
-	} else {
-		numar_bloc_curent := numar_bloc_curent - 1
+	} Else {
+		numar_bloc_curent -= 1
+	}
+		
+	selectareBloc(numar_bloc_curent)
+	
+	If (isFlipH)
+	{
+		flipHorizontal()
 	}
 
-	selectareBloc(numar_bloc_curent)
-	return
+	If (isFlipV)
+	{
+		flipVertical()
+	}
+	
+	redesenare(bloc)
+	Return
 }
 
 r::
@@ -391,7 +481,12 @@ r::
 
 	currentX := startX
 	currentY := startY
-	unghi_total := 0	
+	unghi_total := 0
+	
+	IniWrite, %startX%, session.ini, CurrentSession, currentX
+	IniWrite, %startY%, session.ini, CurrentSession, currentY
+	IniWrite, 0, session.ini, CurrentSession, unghiTotal
+	IniWrite, 1, session.ini, CurrentSession, shapeID
 	return
 }
 
