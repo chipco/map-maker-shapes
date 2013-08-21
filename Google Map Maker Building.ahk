@@ -109,6 +109,8 @@ If (isFlipV)
 {
 	flipVertical()
 }
+
+calculareCentru()
 redesenare(bloc)
 
 calculareCentru()
@@ -215,11 +217,12 @@ flipHorizontal()
 {
 	Global
 	
-	calculareCentru()	
+	calculareCentru()
 	Loop, %numar_puncte%
 	{
 		bloc[a_index][1] := maxX - bloc[a_index][1] + currentX
 	}
+	calculareCentru()
 }
 
 flipVertical()
@@ -231,6 +234,7 @@ flipVertical()
 	{
 		bloc[a_index][2] := maxY - bloc[a_index][2] + currentY
 	}
+	calculareCentru()
 }
 
 A::
@@ -320,18 +324,20 @@ Q::
 NumpadAdd::
 {
 	unghi := degrees(rotireBloc)
-	unghi_total += unghi
+	unghi_total := unghi_total + unghi
 	rotireBloc(unghi)
-	redesenare(bloc)	
+	redesenare(bloc)
+
 	Return
 }
 
 NumpadSub::
 {
 	unghi := degrees(rotireBloc)*-1
-	unghi_total += unghi
+	unghi_total := unghi_total + unghi
 	rotireBloc(unghi)
 	redesenare(bloc)
+	
 	Return
 }
 
