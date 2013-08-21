@@ -69,6 +69,10 @@ redesenare(puncte)
 
 startX := (Width / 2) + 100
 startY := (Height / 3)
+currentX := startX
+currentY := startY
+numar_bloc_curent := 1
+unghi_total := 0
 mutareBloc := 5		;in pixeli
 rotireBloc := 0.5 	;in grade
 
@@ -76,24 +80,6 @@ SetWorkingDir %A_ScriptDir%
 Load_All(shapes, files)
 
 numar_blocuri := shapes.MaxIndex()
-
-IfExist, session.ini
-{
-	IniRead, currentX, session.ini, CurrentSession, currentX
-	IniRead, currentY, session.ini, CurrentSession, currentY
-	IniRead, unghi_total, session.ini, CurrentSession, unghiTotal
-	IniRead, numar_bloc_curent, session.ini, CurrentSession, shapeID
-} Else {
-	IniWrite, %startX%, session.ini, CurrentSession, currentX
-	IniWrite, %startY%, session.ini, CurrentSession, currentY
-	IniWrite, 0, session.ini, CurrentSession, unghiTotal
-	IniWrite, 1, session.ini, CurrentSession, shapeID
-	
-	currentX := startX
-	currentY := startY
-	numar_bloc_curent := 1
-	unghi_total := 0
-}
 
 selectareBloc(numar_bloc_curent)
 
@@ -136,9 +122,7 @@ rotireBloc(unghi)
 		bloc[a_index][1] := xnew + cx
 		bloc[a_index][2] := ynew + cy
 	}	
-	
-	IniWrite, %unghi_total%, session.ini, CurrentSession, unghiTotal
-	
+
 	return
 }
 
@@ -171,8 +155,6 @@ selectareBloc(numar_bloc)
 	calculareCentru()
 	rotireBloc(unghi_total)
 	redesenare(bloc)
-	
-	IniWrite, %numar_bloc%, session.ini, CurrentSession, shapeID
 	
 	ToolTip, % files[numar_bloc], currentX+50, currentY+50
 	SetTimer, RemoveToolTip, 500
@@ -263,8 +245,8 @@ Q::
 		
 		If !ErrorLevel AND FirstShapePoint AND SecondShapePoint
 		{
-			moveX := currentX - beforeShape[FirstShapePoint][1] - bloc[SecondShapePoint][1]
-			moveY := currentY - beforeShape[FirstShapePoint][2] - bloc[SecondShapePoint][2]
+			moveX := currentX + ((beforeShape[FirstShapePoint][1] - bloc[SecondShapePoint][1]) * -1)
+			moveY := currentY + ((beforeShape[FirstShapePoint][2] - bloc[SecondShapePoint][2]) * -1)
 			
 			MouseMove, currentX, currentY
 			MouseClickDrag, L, currentX, currentY, moveX, moveY, 50
@@ -347,9 +329,6 @@ Right::
 		repozitionare(mutareBloc, 0)
     }
 
-	IniWrite, %currentX%, session.ini, CurrentSession, currentX
-	IniWrite, %currentY%, session.ini, CurrentSession, currentY
-	
 	return
 }
 
@@ -412,12 +391,7 @@ r::
 
 	currentX := startX
 	currentY := startY
-	unghi_total := 0
-	
-	IniWrite, %startX%, session.ini, CurrentSession, currentX
-	IniWrite, %startY%, session.ini, CurrentSession, currentY
-	IniWrite, 0, session.ini, CurrentSession, unghiTotal
-	IniWrite, 1, session.ini, CurrentSession, shapeID
+	unghi_total := 0	
 	return
 }
 
